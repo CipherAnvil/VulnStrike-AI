@@ -1,0 +1,103 @@
+{
+  "module": "idor_tester",
+  "base_url": "http://127.0.0.1:50698",
+  "user_a": "alice",
+  "user_b": "bob",
+  "summary": {
+    "total_tested": 7,
+    "vulnerable_count": 2
+  },
+  "findings": [
+    {
+      "url": "http://127.0.0.1:50698/api/orders/201",
+      "pattern": "/api/orders/{id}",
+      "resource_id": "201",
+      "vulnerable": false,
+      "verdict": "skipped_user_a_not_authorized",
+      "similarity": 0.0,
+      "reason": "User A could not access baseline resource (HTTP 404); resource may not exist or is not owned by User A.",
+      "user_a_status": 404,
+      "user_b_status": 404,
+      "user_a_preview": "{\"error\": \"Not found\"}",
+      "user_b_preview": "{\"error\": \"Not found\"}"
+    },
+    {
+      "url": "http://127.0.0.1:50698/api/orders/101",
+      "pattern": "/api/orders/{id}",
+      "resource_id": "101",
+      "vulnerable": true,
+      "verdict": "vulnerable_exact_match",
+      "similarity": 1.0,
+      "reason": "User B received HTTP 2xx with the exact same private payload returned to User A.",
+      "user_a_status": 200,
+      "user_b_status": 200,
+      "user_a_preview": "{\"id\": 101, \"owner\": \"alice\", \"item\": \"Hardware Security Key\", \"total\": 89.99, \"owner_email\": \"alice@lab.local\"}",
+      "user_b_preview": "{\"id\": 101, \"owner\": \"alice\", \"item\": \"Hardware Security Key\", \"total\": 89.99, \"owner_email\": \"alice@lab.local\"}"
+    },
+    {
+      "url": "http://127.0.0.1:50698/api/orders/102",
+      "pattern": "/api/orders/{id}",
+      "resource_id": "102",
+      "vulnerable": true,
+      "verdict": "vulnerable_exact_match",
+      "similarity": 1.0,
+      "reason": "User B received HTTP 2xx with the exact same private payload returned to User A.",
+      "user_a_status": 200,
+      "user_b_status": 200,
+      "user_a_preview": "{\"id\": 102, \"owner\": \"bob\", \"item\": \"USB Logic Analyzer\", \"total\": 149.0, \"owner_email\": \"bob@lab.local\"}",
+      "user_b_preview": "{\"id\": 102, \"owner\": \"bob\", \"item\": \"USB Logic Analyzer\", \"total\": 149.0, \"owner_email\": \"bob@lab.local\"}"
+    },
+    {
+      "url": "http://127.0.0.1:50698/api/invoices/201",
+      "pattern": "/api/invoices/{id}",
+      "resource_id": "201",
+      "vulnerable": false,
+      "verdict": "properly_protected",
+      "similarity": 0.0,
+      "reason": "Access denied to User B (HTTP 403).",
+      "user_a_status": 200,
+      "user_b_status": 403,
+      "user_a_preview": "{\"id\": 201, \"owner\": \"alice\", \"amount\": 89.99, \"card_last4\": \"4242\"}",
+      "user_b_preview": "{\"error\": \"Forbidden\"}"
+    },
+    {
+      "url": "http://127.0.0.1:50698/api/invoices/101",
+      "pattern": "/api/invoices/{id}",
+      "resource_id": "101",
+      "vulnerable": false,
+      "verdict": "skipped_user_a_not_authorized",
+      "similarity": 0.0,
+      "reason": "User A could not access baseline resource (HTTP 404); resource may not exist or is not owned by User A.",
+      "user_a_status": 404,
+      "user_b_status": 404,
+      "user_a_preview": "{\"error\": \"Not found\"}",
+      "user_b_preview": "{\"error\": \"Not found\"}"
+    },
+    {
+      "url": "http://127.0.0.1:50698/api/invoices/102",
+      "pattern": "/api/invoices/{id}",
+      "resource_id": "102",
+      "vulnerable": false,
+      "verdict": "skipped_user_a_not_authorized",
+      "similarity": 0.0,
+      "reason": "User A could not access baseline resource (HTTP 404); resource may not exist or is not owned by User A.",
+      "user_a_status": 404,
+      "user_b_status": 404,
+      "user_a_preview": "{\"error\": \"Not found\"}",
+      "user_b_preview": "{\"error\": \"Not found\"}"
+    },
+    {
+      "url": "http://127.0.0.1:50698/api/me",
+      "pattern": "/api/me",
+      "resource_id": null,
+      "vulnerable": false,
+      "verdict": "different_user_scoped_data",
+      "similarity": 0.1,
+      "reason": "User B received HTTP 2xx, but response content differed from User A's private record (likely session-scoped endpoint).",
+      "user_a_status": 200,
+      "user_b_status": 200,
+      "user_a_preview": "{\"username\": \"alice\", \"email\": \"alice@lab.local\"}",
+      "user_b_preview": "{\"username\": \"bob\", \"email\": \"bob@lab.local\"}"
+    }
+  ]
+}

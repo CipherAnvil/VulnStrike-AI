@@ -1,0 +1,10 @@
+password
+123456
+admin
+secret
+jwtsecret
+changeme
+supersecret
+vulnstrike-lab-secret
+development-key
+qwerty123

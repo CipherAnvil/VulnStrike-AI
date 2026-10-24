@@ -1,0 +1,55 @@
+[
+  {
+    "technology": "nginx",
+    "version": "1.18.0",
+    "source": "header:Server",
+    "cves": [
+      {
+        "id": "CVE-2021-23017",
+        "cvss": 7.7,
+        "has_public_exploit": true
+      }
+    ]
+  },
+  {
+    "technology": "PHP",
+    "version": "8.1.2",
+    "source": "header:X-Powered-By",
+    "cves": [
+      {
+        "id": "CVE-2021-21708",
+        "cvss": 9.8,
+        "has_public_exploit": true
+      }
+    ]
+  },
+  {
+    "technology": "WordPress",
+    "version": "6.4.1",
+    "source": "meta:generator",
+    "cves": [
+      {
+        "id": "CVE-2024-4439",
+        "cvss": 7.2,
+        "has_public_exploit": false
+      }
+    ]
+  },
+  {
+    "technology": "jquery",
+    "version": "3.4.1",
+    "source": "script:src",
+    "cves": [
+      {
+        "id": "CVE-2020-11022",
+        "cvss": 6.1,
+        "has_public_exploit": true
+      },
+      {
+        "id": "CVE-2020-11023",
+        "cvss": 6.1,
+        "has_public_exploit": false
+      }
+    ]
+  }
+]

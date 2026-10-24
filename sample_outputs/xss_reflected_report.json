@@ -1,0 +1,39 @@
+{
+  "module": "xss_verifier",
+  "target_url": "http://127.0.0.1:50698/search",
+  "verify_url": null,
+  "summary": {
+    "total_cases": 1,
+    "confirmed_count": 1
+  },
+  "findings": [
+    {
+      "target_url": "http://127.0.0.1:50698/search",
+      "verify_url": null,
+      "final_url": "http://127.0.0.1:50698/search?q=%3Cscript%3Ealert%28%27VulnStrike-Reflected%27%29%3C%2Fscript%3E",
+      "input_selector": "#search-box",
+      "payload": "<script>alert('VulnStrike-Reflected')</script>",
+      "confirmed": true,
+      "detection_methods": [
+        "dialog_event",
+        "dom_mutation"
+      ],
+      "dialogs": [
+        {
+          "type": "alert",
+          "message": "VulnStrike-Reflected"
+        }
+      ],
+      "dom_mutations": [
+        {
+          "tag": "dom_diff",
+          "id": null,
+          "reason": "unescaped_stored_or_reflected_element",
+          "outer_html": "<script>alert('VulnStrike-Reflected')</script>"
+        }
+      ],
+      "screenshot": "C:\\Users\\acer\\Downloads\\vulnstrike_ai\\vulnstrike\\sample_outputs\\screenshots\\xss_001_search-box_20261024T113545Z.png",
+      "error": null
+    }
+  ]
+}

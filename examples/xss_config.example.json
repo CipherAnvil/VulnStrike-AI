@@ -1,0 +1,24 @@
+{
+  "url": "http://localhost:8080/feedback",
+  "verify_url": "http://localhost:8080/comments",
+  "selectors": [
+    "#comment-input"
+  ],
+  "submit_selector": "#submit-comment",
+  "extra_fields": {
+    "#author-input": "LabAuditor"
+  },
+  "mutation_selector": "[data-xss], #xss-canary",
+  "payloads": [
+    "<img src=x onerror=\"alert('VulnStrike-XSS')\">",
+    "<svg id=\"xss-canary\" data-xss=\"1\"></svg>"
+  ],
+  "login": {
+    "login_path": "/login",
+    "username": "alice",
+    "password": "alice_password_123"
+  },
+  "screenshot_dir": "output/screenshots",
+  "timeout_ms": 10000,
+  "settle_ms": 700
+}

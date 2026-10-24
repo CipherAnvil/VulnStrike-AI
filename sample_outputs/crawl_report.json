@@ -1,0 +1,197 @@
+{
+  "pages": [
+    {
+      "url": "http://127.0.0.1:50698/",
+      "status_code": 200,
+      "depth": 0,
+      "forms": [],
+      "cookies": [
+        {
+          "name": "visitor_track",
+          "value": "lab_vis_01",
+          "domain": "127.0.0.1",
+          "path": "/",
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax",
+          "expires": -1
+        }
+      ],
+      "api_calls": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:50698/api/stats",
+          "resource_type": "fetch"
+        }
+      ],
+      "error": null
+    },
+    {
+      "url": "http://127.0.0.1:50698/login",
+      "status_code": 200,
+      "depth": 1,
+      "forms": [
+        {
+          "action": "http://127.0.0.1:50698/api/login",
+          "method": "POST",
+          "inputs": [
+            {
+              "name": "username",
+              "type": "text",
+              "id": "username-input"
+            },
+            {
+              "name": "password",
+              "type": "password",
+              "id": "password-input"
+            },
+            {
+              "name": null,
+              "type": "submit",
+              "id": "login-btn"
+            }
+          ]
+        }
+      ],
+      "cookies": [
+        {
+          "name": "visitor_track",
+          "value": "lab_vis_01",
+          "domain": "127.0.0.1",
+          "path": "/",
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax",
+          "expires": -1
+        }
+      ],
+      "api_calls": [],
+      "error": null
+    },
+    {
+      "url": "http://127.0.0.1:50698/search",
+      "status_code": 200,
+      "depth": 1,
+      "forms": [
+        {
+          "action": "http://127.0.0.1:50698/search",
+          "method": "GET",
+          "inputs": [
+            {
+              "name": "q",
+              "type": "text",
+              "id": "search-box"
+            },
+            {
+              "name": null,
+              "type": "submit",
+              "id": "search-submit"
+            }
+          ]
+        }
+      ],
+      "cookies": [
+        {
+          "name": "visitor_track",
+          "value": "lab_vis_01",
+          "domain": "127.0.0.1",
+          "path": "/",
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax",
+          "expires": -1
+        }
+      ],
+      "api_calls": [],
+      "error": null
+    },
+    {
+      "url": "http://127.0.0.1:50698/feedback",
+      "status_code": 200,
+      "depth": 1,
+      "forms": [
+        {
+          "action": "http://127.0.0.1:50698/api/comments",
+          "method": "POST",
+          "inputs": [
+            {
+              "name": "author",
+              "type": "text",
+              "id": "author-input"
+            },
+            {
+              "name": "comment",
+              "type": "textarea",
+              "id": "comment-input"
+            },
+            {
+              "name": null,
+              "type": "submit",
+              "id": "submit-comment"
+            }
+          ]
+        }
+      ],
+      "cookies": [
+        {
+          "name": "visitor_track",
+          "value": "lab_vis_01",
+          "domain": "127.0.0.1",
+          "path": "/",
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax",
+          "expires": -1
+        }
+      ],
+      "api_calls": [],
+      "error": null
+    },
+    {
+      "url": "http://127.0.0.1:50698/comments",
+      "status_code": 200,
+      "depth": 1,
+      "forms": [],
+      "cookies": [
+        {
+          "name": "visitor_track",
+          "value": "lab_vis_01",
+          "domain": "127.0.0.1",
+          "path": "/",
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax",
+          "expires": -1
+        }
+      ],
+      "api_calls": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:50698/api/comments",
+          "resource_type": "fetch"
+        }
+      ],
+      "error": null
+    },
+    {
+      "url": "http://127.0.0.1:50698/broken-route",
+      "status_code": 404,
+      "depth": 1,
+      "forms": [],
+      "cookies": [
+        {
+          "name": "visitor_track",
+          "value": "lab_vis_01",
+          "domain": "127.0.0.1",
+          "path": "/",
+          "httpOnly": false,
+          "secure": false,
+          "sameSite": "Lax",
+          "expires": -1
+        }
+      ],
+      "api_calls": [],
+      "error": null
+    }
+  ]
+}

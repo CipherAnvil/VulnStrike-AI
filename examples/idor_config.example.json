@@ -1,0 +1,27 @@
+{
+  "base_url": "http://localhost:8080",
+  "login_path": "/login",
+  "login_mode": "form",
+  "username_selector": "input[name='username']",
+  "password_selector": "input[name='password']",
+  "submit_selector": "button[type='submit']",
+  "user_a": {
+    "username": "alice",
+    "password": "alice_password_123",
+    "extra_markers": ["alice@lab.local"]
+  },
+  "user_b": {
+    "username": "bob",
+    "password": "bob_password_123",
+    "extra_markers": ["bob@lab.local"]
+  },
+  "patterns": [
+    "/api/orders/{id}",
+    "/orders/{id}",
+    "/api/profile"
+  ],
+  "ids": ["101"],
+  "id_range": "101-104",
+  "discover_endpoint": "/api/orders",
+  "timeout_ms": 10000
+}
