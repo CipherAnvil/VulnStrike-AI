@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  demo-target:
+    build:
+      context: ./demo_target
+      dockerfile: Dockerfile
+    container_name: vulnstrike-demo-target
+    ports:
+      - "127.0.0.1:8088:8088"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8088/api/v1/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: vulnstrike-backend
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:///./vulnstrike.db
+    volumes:
+      - vulnstrike_data:/app/data
+    restart: unless-stopped
+    depends_on:
+      - demo-target
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: vulnstrike-frontend
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
+    restart: unless-stopped
+    depends_on:
+      - backend
+
+volumes:
+  vulnstrike_data:
