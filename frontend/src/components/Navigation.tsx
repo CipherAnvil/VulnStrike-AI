@@ -91,9 +91,9 @@ export function TopBar() {
   return (
     <header className="h-14 border-b border-surface-border bg-surface/80 backdrop-blur px-6 flex items-center justify-between sticky top-0 z-10">
       <div className="flex items-center space-x-3">
-        <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-mono bg-emerald-950/60 border border-emerald-500/30 text-emerald-400">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span>ORCHESTRATOR ONLINE</span>
+        <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-mono bg-zinc-900 border border-zinc-700 text-zinc-300">
+          <ShieldCheck className="w-3 h-3" />
+          <span>AUTHORIZED LAB SCOPE</span>
         </span>
         <span className="text-xs text-zinc-300 border-l border-zinc-800 pl-3">
           Target Scope: <span className="font-mono text-zinc-300">demo-target:8088 (Seed Lab)</span>

@@ -13,8 +13,9 @@ import {
   FileCode
 } from "lucide-react";
 import { fetchFindings } from "@/lib/api";
-import { Finding, Severity, VerificationStatus } from "@/lib/types";
+import { ApiSource, Finding, Severity, VerificationStatus } from "@/lib/types";
 import { SeverityBadge, StatusBadge, DemoNoticeBanner } from "@/components/Badges";
+import { ApiErrorNotice, EmptyNotice, LoadingNotice } from "@/components/ApiState";
 
 export default function FindingsPage() {
   const [findings, setFindings] = useState<Finding[]>([]);
@@ -23,13 +24,23 @@ export default function FindingsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedFinding, setSelectedFinding] = useState<Finding | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [source, setSource] = useState<ApiSource | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
-      const data = await fetchFindings();
-      setFindings(data);
-      if (data.length > 0) setSelectedFinding(data[0]);
-      setLoading(false);
+      try {
+        const result = await fetchFindings();
+        setFindings(result.data);
+        setSource(result.source);
+        setNotice(result.notice || null);
+        setSelectedFinding(result.data[0] || null);
+      } catch (loadError) {
+        setError(loadError instanceof Error ? loadError.message : "Failed to load findings.");
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, []);
@@ -46,7 +57,9 @@ export default function FindingsPage() {
 
   return (
     <div className="space-y-6">
-      <DemoNoticeBanner />
+      <DemoNoticeBanner visible={source === "demo"} message={notice || undefined} />
+      {loading && <LoadingNotice label="Loading finding inventory..." />}
+      {error && <ApiErrorNotice message={`Finding inventory unavailable. ${error}`} />}
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-surface-border">
         <div>
@@ -104,7 +117,7 @@ export default function FindingsPage() {
         <div className="lg:col-span-7 bg-surface-card border border-surface-border rounded-lg overflow-hidden">
           <div className="p-4 border-b border-surface-border flex justify-between items-center text-xs font-mono text-zinc-400">
             <span>Showing {filtered.length} findings</span>
-            <span>Simulated Lab Fixtures</span>
+            <span>{source === "demo" ? "Demo Fixtures" : source === "live" ? "Live API" : "Unavailable"}</span>
           </div>
 
           <div className="divide-y divide-surface-border overflow-x-auto">
@@ -131,9 +144,16 @@ export default function FindingsPage() {
               </div>
             ))}
 
-            {filtered.length === 0 && (
-              <div className="p-12 text-center text-zinc-500 text-xs font-mono">
-                No findings match the current filter criteria.
+            {!loading && filtered.length === 0 && (
+              <div className="p-6">
+                <EmptyNotice
+                  title={findings.length === 0 ? "No findings recorded" : "No matching findings"}
+                  description={
+                    findings.length === 0
+                      ? "Completed scan results will appear here. No demo records are substituted for an empty live response."
+                      : "Adjust the search or filter criteria to see more results."
+                  }
+                />
               </div>
             )}
           </div>
@@ -195,7 +215,9 @@ export default function FindingsPage() {
                   {selectedFinding.evidence_references.map((ev) => (
                     <div key={ev} className="bg-surface border border-surface-border rounded p-2 text-xs font-mono text-zinc-300 flex items-center justify-between">
                       <span>{ev}</span>
-                      <span className="text-[10px] text-primary">Simulated Lab Evidence</span>
+                      <span className="text-[10px] text-primary">
+                        {selectedFinding.is_demo ? "Demo Evidence" : "Evidence Reference"}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -203,7 +225,11 @@ export default function FindingsPage() {
             </div>
           ) : (
             <div className="p-12 text-center text-zinc-500 text-xs">
-              Select a finding to inspect detailed description and remediation guidance.
+              {loading
+                ? "Loading finding details..."
+                : error
+                  ? "Finding details are unavailable until the API responds."
+                  : "Select a finding to inspect detailed description and remediation guidance."}
             </div>
           )}
         </div>

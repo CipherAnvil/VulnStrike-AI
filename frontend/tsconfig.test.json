@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "ES2022",
+    "outDir": ".test-dist",
+    "rootDir": ".",
+    "incremental": false,
+    "isolatedModules": false,
+    "plugins": []
+  },
+  "include": [
+    "src/lib/api.ts",
+    "src/lib/types.ts",
+    "src/lib/mockData.ts",
+    "tests/**/*.ts"
+  ],
+  "exclude": ["node_modules", ".next", ".test-dist"]
+}

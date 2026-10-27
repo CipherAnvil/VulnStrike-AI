@@ -1,3 +1,4 @@
+import uuid
 import pytest
 from app.storage.database import SessionLocal, init_db
 from app.storage.repositories import ScanRepository, FindingRepository, EvidenceRepository
@@ -14,13 +15,15 @@ def test_repositories_and_reports():
         finding_repo = FindingRepository(db)
         evidence_repo = EvidenceRepository(db)
 
-        scan_id = "SCAN-TEST-001"
+        scan_id = f"SCAN-TEST-{uuid.uuid4().hex[:8]}"
+        finding_id = f"F-{uuid.uuid4().hex[:8]}"
+        evidence_id = f"EV-{uuid.uuid4().hex[:8]}"
         scan = scan_repo.create(scan_id, "http://localhost:8080", "standard", ["cve_intel"])
         assert scan.id == scan_id
         assert scan.status == ScanStatus.QUEUED
 
         finding = FindingSchema(
-            id="F-001",
+            id=finding_id,
             scan_id=scan_id,
             module="cve_intel",
             category=FindingCategory.ACCESS_CONTROL,
@@ -30,7 +33,7 @@ def test_repositories_and_reports():
             endpoint="http://localhost:8080/admin",
             summary="Admin accessible without token",
             description="Detailed test description",
-            evidence_references=["EV-01"],
+            evidence_references=[evidence_id],
             remediation_guidance="Enforce RBAC",
             ml_confidence=0.91,
             created_at="2026-10-24T12:00:00Z",

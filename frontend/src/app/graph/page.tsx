@@ -7,32 +7,98 @@ import {
   ZoomOut,
   Maximize2,
   Info,
-  ShieldAlert,
   ArrowRight
 } from "lucide-react";
-import { fetchAttackGraph } from "@/lib/api";
-import { AttackGraphData, GraphNode, GraphEdge } from "@/lib/types";
+import { fetchScans, fetchAttackGraph } from "@/lib/api";
+import { ApiSource, AttackGraphData, GraphNode } from "@/lib/types";
 import { SeverityBadge, StatusBadge, DemoNoticeBanner } from "@/components/Badges";
+import { ApiErrorNotice, EmptyNotice, LoadingNotice } from "@/components/ApiState";
+
+function nodeClasses(node: GraphNode, selected: boolean): string {
+  const base = "p-3 rounded-lg border-2 cursor-pointer transition text-left";
+
+  if (node.type === "target") {
+    return `${base} ${selected ? "bg-cyan-950/40 border-cyan-400" : "bg-surface border-cyan-500/40 hover:border-cyan-400"}`;
+  }
+
+  if (node.type === "impact") {
+    return `${base} ${selected ? "bg-orange-950/40 border-orange-500" : "bg-surface border-orange-500/40 hover:border-orange-400"}`;
+  }
+
+  switch ((node.severity || "info").toLowerCase()) {
+    case "critical":
+      return `${base} ${selected ? "bg-red-950/40 border-red-500" : "bg-surface border-red-500/40 hover:border-red-400"}`;
+    case "high":
+      return `${base} ${selected ? "bg-orange-950/40 border-orange-500" : "bg-surface border-orange-500/40 hover:border-orange-400"}`;
+    case "medium":
+      return `${base} ${selected ? "bg-yellow-950/40 border-yellow-500" : "bg-surface border-yellow-500/40 hover:border-yellow-400"}`;
+    default:
+      return `${base} ${selected ? "bg-cyan-950/40 border-cyan-400" : "bg-surface border-cyan-500/40 hover:border-cyan-400"}`;
+  }
+}
 
 export default function AttackGraphPage() {
   const [graphData, setGraphData] = useState<AttackGraphData | null>(null);
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [source, setSource] = useState<ApiSource | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [scanLabel, setScanLabel] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
-      const data = await fetchAttackGraph();
-      setGraphData(data);
-      if (data.nodes.length > 0) {
-        setSelectedNode(data.nodes[1]); // Default to first finding
+      try {
+        const scansResult = await fetchScans();
+        const scan = scansResult.data[0];
+        const messages: string[] = [];
+        let nextSource: ApiSource = scansResult.source;
+
+        if (scansResult.notice) messages.push(scansResult.notice);
+
+        if (!scan) {
+          setGraphData({ nodes: [], edges: [] });
+          setSelectedNode(null);
+          setScanLabel(null);
+          setSource(nextSource);
+          setNotice(messages.join(" ") || null);
+          return;
+        }
+
+        setScanLabel(`${scan.id} · ${scan.target_url}`);
+        const graphResult = await fetchAttackGraph(scan.id);
+        setGraphData(graphResult.data);
+        setSelectedNode(
+          graphResult.data.nodes.find((node) => node.type === "finding") ||
+            graphResult.data.nodes[0] ||
+            null
+        );
+        if (graphResult.source === "demo") nextSource = "demo";
+        if (graphResult.notice) messages.push(graphResult.notice);
+        setSource(nextSource);
+        setNotice(messages.join(" ") || null);
+      } catch (loadError) {
+        setError(loadError instanceof Error ? loadError.message : "Failed to load the attack graph.");
+      } finally {
+        setLoading(false);
       }
     }
     load();
   }, []);
 
+  const nodes = graphData?.nodes || [];
+  const edges = graphData?.edges || [];
+  const targetNodes = nodes.filter((node) => node.type === "target");
+  const findingNodes = nodes.filter((node) => node.type === "finding");
+  const impactNodes = nodes.filter((node) => node.type !== "target" && node.type !== "finding");
+  const nodeById = new Map(nodes.map((node) => [node.id, node]));
+
   return (
     <div className="space-y-6">
-      <DemoNoticeBanner />
+      <DemoNoticeBanner visible={source === "demo"} message={notice || undefined} />
+      {loading && <LoadingNotice label="Loading attack graph..." />}
+      {error && <ApiErrorNotice message={`Attack graph unavailable. ${error}`} />}
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-surface-border">
         <div>
@@ -43,9 +109,9 @@ export default function AttackGraphPage() {
           <p className="text-sm text-zinc-400 mt-1">
             Evidence-backed relationship graph mapping vulnerability pivots to asset compromise.
           </p>
+          {scanLabel && <p className="text-xs text-zinc-500 font-mono mt-1">{scanLabel}</p>}
         </div>
 
-        {/* Legend */}
         <div className="flex items-center space-x-4 text-xs font-mono text-zinc-400 bg-surface-card border border-surface-border px-3 py-1.5 rounded">
           <div className="flex items-center space-x-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-cyan-500" />
@@ -53,19 +119,17 @@ export default function AttackGraphPage() {
           </div>
           <div className="flex items-center space-x-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
-            <span>Critical Finding</span>
+            <span>Finding</span>
           </div>
           <div className="flex items-center space-x-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-orange-500" />
-            <span>Pivot / Impact</span>
+            <span>Impact</span>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Interactive Graph Canvas Area */}
-        <div className="lg:col-span-8 bg-surface-card border border-surface-border rounded-lg p-5 flex flex-col h-[560px] relative overflow-hidden">
-          {/* Controls Bar */}
+        <div className="lg:col-span-8 bg-surface-card border border-surface-border rounded-lg p-5 flex flex-col h-[560px] relative overflow-y-auto">
           <div className="absolute top-4 right-4 z-10 flex space-x-2 bg-surface/90 border border-surface-border p-1.5 rounded backdrop-blur">
             <button
               onClick={() => setZoomLevel(prev => Math.min(prev + 0.1, 1.4))}
@@ -90,99 +154,94 @@ export default function AttackGraphPage() {
             </button>
           </div>
 
-          {/* Graph Nodes Representation */}
           <div
-            className="flex-1 flex flex-col justify-center items-center relative transition-transform duration-200"
+            className="flex-1 flex flex-col justify-center items-center relative transition-transform duration-200 py-10"
             style={{ transform: `scale(${zoomLevel})` }}
           >
-            {/* Structured Synthetic Graph View */}
-            <div className="space-y-10 w-full max-w-xl">
-              {/* Root Target Node */}
-              <div className="flex justify-center">
-                <div
-                  onClick={() => setSelectedNode(graphData?.nodes[0] || null)}
-                  className={`p-3 rounded-lg border-2 cursor-pointer transition text-center max-w-xs ${
-                    selectedNode?.id === "target-root"
-                      ? "bg-cyan-950/40 border-cyan-400 shadow-lg shadow-cyan-950/50"
-                      : "bg-surface border-cyan-500/40 hover:border-cyan-400"
-                  }`}
-                >
-                  <div className="text-[10px] font-mono uppercase text-cyan-400 font-bold">Target Ingress</div>
-                  <div className="text-xs font-mono text-white mt-0.5">demo-target:8088</div>
-                </div>
+            {nodes.length === 0 ? (
+              <div className="w-full px-6">
+                <EmptyNotice
+                  title={loading ? "Loading graph..." : "No attack graph yet"}
+                  description={
+                    loading
+                      ? "Waiting for the latest scan graph."
+                      : "Complete an authorized scan to generate evidence-backed graph relationships."
+                  }
+                />
               </div>
-
-              {/* Edge line down */}
-              <div className="flex justify-around items-center px-12">
-                <div className="w-0.5 h-6 bg-zinc-700 mx-auto" />
-              </div>
-
-              {/* Vulnerability Discovery Layer */}
-              <div className="grid grid-cols-2 gap-6">
-                <div
-                  onClick={() => setSelectedNode(graphData?.nodes[1] || null)}
-                  className={`p-3.5 rounded-lg border-2 cursor-pointer transition text-left ${
-                    selectedNode?.id === "finding-cve"
-                      ? "bg-red-950/40 border-red-500 shadow-lg shadow-red-950/50"
-                      : "bg-surface border-red-500/40 hover:border-red-400"
-                  }`}
-                >
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-[10px] font-mono text-red-400 font-bold">CRITICAL</span>
-                    <span className="text-[10px] font-mono text-zinc-400">CVE-2021-41773</span>
+            ) : (
+              <div className="space-y-8 w-full max-w-xl">
+                {targetNodes.length > 0 && (
+                  <div className="flex flex-wrap justify-center gap-3">
+                    {targetNodes.map((node) => (
+                      <div
+                        key={node.id}
+                        onClick={() => setSelectedNode(node)}
+                        className={`${nodeClasses(node, selectedNode?.id === node.id)} text-center max-w-xs`}
+                      >
+                        <div className="text-[10px] font-mono uppercase text-cyan-400 font-bold">Target Ingress</div>
+                        <div className="text-xs font-mono text-white mt-0.5">{node.label}</div>
+                      </div>
+                    ))}
                   </div>
-                  <div className="text-xs font-semibold text-white">Apache 2.4.49 Traversal</div>
-                  <div className="text-[10px] font-mono text-zinc-400 mt-1">Endpoint: /cgi-bin/...</div>
-                </div>
+                )}
 
-                <div
-                  onClick={() => setSelectedNode(graphData?.nodes[2] || null)}
-                  className={`p-3.5 rounded-lg border-2 cursor-pointer transition text-left ${
-                    selectedNode?.id === "finding-bola"
-                      ? "bg-orange-950/40 border-orange-500 shadow-lg shadow-orange-950/50"
-                      : "bg-surface border-orange-500/40 hover:border-orange-400"
-                  }`}
-                >
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-[10px] font-mono text-orange-400 font-bold">HIGH</span>
-                    <span className="text-[10px] font-mono text-zinc-400">BOLA / RBAC</span>
+                {findingNodes.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {findingNodes.map((node) => (
+                      <div
+                        key={node.id}
+                        onClick={() => setSelectedNode(node)}
+                        className={nodeClasses(node, selectedNode?.id === node.id)}
+                      >
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-[10px] font-mono text-zinc-400 uppercase">{node.type}</span>
+                          {node.severity && <SeverityBadge severity={node.severity} />}
+                        </div>
+                        <div className="text-xs font-semibold text-white">{node.label}</div>
+                        {node.data?.endpoint && (
+                          <div className="text-[10px] font-mono text-zinc-400 mt-1 break-all">{node.data.endpoint}</div>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                  <div className="text-xs font-semibold text-white">Unauth Admin Telemetry</div>
-                  <div className="text-[10px] font-mono text-zinc-400 mt-1">Endpoint: /internal/admin/...</div>
-                </div>
-              </div>
+                )}
 
-              {/* Edge connection to Consequence */}
-              <div className="flex justify-end pr-28">
-                <div className="flex items-center space-x-2 text-[10px] font-mono text-primary bg-surface border border-surface-border px-2 py-0.5 rounded">
-                  <span>Permits pivot into registry</span>
-                  <ArrowRight className="w-3 h-3 text-primary" />
-                </div>
-              </div>
-
-              {/* Pivoted Impact Node */}
-              <div className="flex justify-end pr-14">
-                <div
-                  onClick={() => setSelectedNode(graphData?.nodes[4] || null)}
-                  className={`p-3.5 rounded-lg border-2 cursor-pointer transition text-left w-64 ${
-                    selectedNode?.id === "impact-data-exfil"
-                      ? "bg-red-950/40 border-red-500 shadow-lg shadow-red-950/50"
-                      : "bg-surface border-red-500/40 hover:border-red-400"
-                  }`}
-                >
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-[10px] font-mono text-red-400 font-bold">POTENTIAL IMPACT</span>
-                    <span className="text-[10px] font-mono text-zinc-400">EXFILTRATION</span>
+                {impactNodes.length > 0 && (
+                  <div className="flex flex-wrap justify-center gap-3">
+                    {impactNodes.map((node) => (
+                      <div
+                        key={node.id}
+                        onClick={() => setSelectedNode(node)}
+                        className={`${nodeClasses(node, selectedNode?.id === node.id)} w-full sm:w-72`}
+                      >
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-[10px] font-mono text-zinc-400 uppercase">{node.type}</span>
+                          {node.severity && <SeverityBadge severity={node.severity} />}
+                        </div>
+                        <div className="text-xs font-semibold text-white">{node.label}</div>
+                      </div>
+                    ))}
                   </div>
-                  <div className="text-xs font-semibold text-white">Synthetic Tenant Exposure</div>
-                  <div className="text-[10px] text-zinc-400 mt-1">Seed customer tokens exposed</div>
-                </div>
+                )}
+
+                {edges.length > 0 && (
+                  <div className="border-t border-surface-border pt-4 space-y-1.5">
+                    {edges.map((edge) => (
+                      <div key={edge.id} className="flex items-center justify-center space-x-2 text-[10px] font-mono text-zinc-400">
+                        <span>{nodeById.get(edge.source)?.label || edge.source}</span>
+                        <ArrowRight className="w-3 h-3 text-primary shrink-0" />
+                        <span>{nodeById.get(edge.target)?.label || edge.target}</span>
+                        <span className="text-zinc-600">({edge.label || edge.relationship})</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            </div>
+            )}
           </div>
         </div>
 
-        {/* Selected Node Details Panel */}
         <div className="lg:col-span-4 bg-surface-card border border-surface-border rounded-lg p-6 space-y-5">
           <div className="flex items-center justify-between pb-3 border-b border-surface-border">
             <h2 className="text-sm font-semibold tracking-wider uppercase text-zinc-300 font-mono">
@@ -207,6 +266,13 @@ export default function AttackGraphPage() {
                 <div>
                   <span className="text-[10px] font-mono uppercase text-zinc-400 block mb-1">Severity Rating</span>
                   <SeverityBadge severity={selectedNode.severity} />
+                </div>
+              )}
+
+              {selectedNode.status && (
+                <div>
+                  <span className="text-[10px] font-mono uppercase text-zinc-400 block mb-1">Verification Status</span>
+                  <StatusBadge status={selectedNode.status} />
                 </div>
               )}
 
@@ -238,12 +304,16 @@ export default function AttackGraphPage() {
               )}
 
               <div className="p-3 bg-surface border border-surface-border rounded text-[11px] text-zinc-400">
-                <strong className="text-zinc-300">Integrity Note:</strong> Attack-chains are derived solely from verified relationships supported by collected evidence fixtures.
+                <strong className="text-zinc-300">Integrity Note:</strong> Graph entities are rendered from the selected scan response. Demo fixtures are explicitly labeled and are not live findings.
               </div>
             </div>
           ) : (
             <div className="text-center text-xs text-zinc-500 py-12">
-              Select a node in the graph to view technical details and evidence.
+              {loading
+                ? "Loading graph details..."
+                : error
+                  ? "Graph details are unavailable until the API responds."
+                  : "Select a node in the graph to view technical details and evidence."}
             </div>
           )}
         </div>

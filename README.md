@@ -134,15 +134,28 @@ docker-compose down -v
 
 ## 5. Running Verification Tests
 
-Run the full pytest suite for scope validation, evidence redaction, module registry, repositories, reports, and attack graph generation:
+Run the full pytest suite for scope validation, safe HTTP execution, contracts/adapters, evidence redaction, module registry, repositories, reports, and attack graph generation:
 
 ```powershell
-$env:PYTHONPATH = "C:\Users\DELL\.gemini\antigravity\scratch\vulnstrike\backend"
-.\.venv\Scripts\pytest.exe backend/tests -v
+.\.venv\Scripts\python.exe -m pytest backend/tests -v
 ```
+
+Tests use an isolated temporary database and do not modify `vulnstrike.db`.
 
 Run TypeScript compilation and static verification:
 ```powershell
 cd frontend
+npm run typecheck
 npm run build
 ```
+
+Run the frontend API fallback and demo-labeling tests:
+```powershell
+cd frontend
+npm run test:api
+```
+
+### Environment notes
+- Docker/Compose may be unavailable in some environments; see `docker-compose.yml` for the isolated lab configuration.
+- Only the authorized local demo target and explicitly allowed lab hosts are testable.
+- Simulated ML metrics and mock modules are labeled and must not be presented as verified live results.

@@ -10,26 +10,46 @@ import {
   RefreshCw
 } from "lucide-react";
 import { fetchHealth } from "@/lib/api";
+import { ApiSource, HealthData } from "@/lib/types";
 import { DemoNoticeBanner } from "@/components/Badges";
+import { ApiErrorNotice, LoadingNotice } from "@/components/ApiState";
 
 export default function SettingsPage() {
-  const [health, setHealth] = useState<any>(null);
+  const [health, setHealth] = useState<HealthData | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [source, setSource] = useState<ApiSource | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const load = async () => {
     setRefreshing(true);
-    const data = await fetchHealth();
-    setHealth(data);
-    setRefreshing(false);
+    setError(null);
+    try {
+      const result = await fetchHealth();
+      setHealth(result.data);
+      setSource(result.source);
+      setNotice(result.notice || null);
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : "Failed to probe the backend.");
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   useEffect(() => {
     load();
   }, []);
 
+  const isDemoHealth = health?.is_demo === true;
+
   return (
     <div className="space-y-6">
-      <DemoNoticeBanner />
+      <DemoNoticeBanner
+        visible={source === "demo" || isDemoHealth}
+        message={notice || "Simulated health and ML metrics are demo-only. They are not verified live service status."}
+      />
+      {refreshing && !health && <LoadingNotice label="Probing backend health..." />}
+      {error && <ApiErrorNotice message={`Backend health unavailable. ${error}`} />}
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-surface-border">
         <div>
@@ -63,11 +83,15 @@ export default function SettingsPage() {
           <div className="space-y-3 text-xs">
             <div className="flex justify-between p-3 rounded bg-surface border border-surface-border">
               <span className="text-zinc-400 font-mono">Service Status</span>
-              <span className="text-emerald-400 font-mono font-bold uppercase">{health?.status || "HEALTHY"}</span>
+              <span className={`font-mono font-bold uppercase ${
+                isDemoHealth ? "text-amber-400" : error ? "text-red-400" : "text-emerald-400"
+              }`}>
+                {health?.status || "Unavailable"}
+              </span>
             </div>
             <div className="flex justify-between p-3 rounded bg-surface border border-surface-border">
               <span className="text-zinc-400 font-mono">Persistence Engine</span>
-              <span className="text-white font-mono">{health?.database || "SQLite 3 (Local Lab)"}</span>
+              <span className="text-white font-mono">{health?.database || "Not reported"}</span>
             </div>
             <div className="flex justify-between p-3 rounded bg-surface border border-surface-border">
               <span className="text-zinc-400 font-mono">Target Scope Boundary</span>
@@ -84,22 +108,26 @@ export default function SettingsPage() {
           </h2>
 
           <div className="space-y-2.5">
-            {(health?.registered_modules || [
-              { name: "cve_intel", display_name: "CVE Intelligence", status: "ready" },
-              { name: "web_analyzer", display_name: "Web Analyzer", status: "ready" },
-              { name: "auth_tester", display_name: "Auth & BOLA Inspector", status: "ready" },
-              { name: "api_inspector", display_name: "API Probe Engine", status: "ready" }
-            ]).map((mod: any) => (
+            {(health?.registered_modules || []).map((mod) => (
               <div key={mod.name} className="p-3 rounded bg-surface border border-surface-border flex justify-between items-center text-xs">
                 <div>
                   <div className="font-semibold text-white">{mod.display_name}</div>
                   <div className="text-[10px] font-mono text-zinc-400">module_id: {mod.name}</div>
                 </div>
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-950/60 border border-emerald-500/40 text-emerald-400">
-                  READY
+                <span className={`px-2 py-0.5 rounded text-[10px] font-mono border ${
+                  isDemoHealth
+                    ? "bg-amber-950/60 border-amber-500/40 text-amber-400"
+                    : "bg-emerald-950/60 border-emerald-500/40 text-emerald-400"
+                }`}>
+                  {isDemoHealth ? "DEMO" : mod.status.toUpperCase()}
                 </span>
               </div>
             ))}
+            {!refreshing && !error && (health?.registered_modules || []).length === 0 && (
+              <div className="py-6 text-center text-xs text-zinc-500">
+                No scanner modules reported by the backend.
+              </div>
+            )}
           </div>
         </div>
       </div>

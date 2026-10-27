@@ -11,24 +11,56 @@ import {
   Terminal
 } from "lucide-react";
 import { fetchHealth } from "@/lib/api";
+import { ApiSource, HealthData } from "@/lib/types";
 import { DemoNoticeBanner } from "@/components/Badges";
+import { ApiErrorNotice, EmptyNotice, LoadingNotice } from "@/components/ApiState";
 
 export default function ModelIntelligencePage() {
-  const [health, setHealth] = useState<any>(null);
+  const [health, setHealth] = useState<HealthData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [source, setSource] = useState<ApiSource | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
-      const data = await fetchHealth();
-      setHealth(data);
+      try {
+        const result = await fetchHealth();
+        setHealth(result.data);
+        setSource(result.source);
+        setNotice(result.notice || null);
+      } catch (loadError) {
+        setError(loadError instanceof Error ? loadError.message : "Failed to load model health.");
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, []);
 
   const ml = health?.ml_engine;
+  const isDemoMetrics = health?.is_demo === true || ml?.is_demo === true;
+  const statusLabel = loading
+    ? "LOADING"
+    : error
+      ? "UNAVAILABLE"
+      : isDemoMetrics
+        ? "SIMULATED DEMO DATA"
+        : source === "live"
+          ? "LIVE API"
+          : "UNAVAILABLE";
 
   return (
     <div className="space-y-6">
-      <DemoNoticeBanner />
+      <DemoNoticeBanner
+        visible={source === "demo" || isDemoMetrics}
+        message={
+          notice ||
+          "Simulated health and ML metrics are demo-only. They are not a verified live model or service status."
+        }
+      />
+      {loading && <LoadingNotice label="Loading model health..." />}
+      {error && <ApiErrorNotice message={`Model health unavailable. ${error}`} />}
 
       <div className="flex items-center justify-between pb-2 border-b border-surface-border">
         <div>
@@ -49,14 +81,29 @@ export default function ModelIntelligencePage() {
             <div>
               <span className="text-[10px] font-mono uppercase text-primary font-bold">MODEL PROFILE</span>
               <h2 className="text-xl font-bold text-white mt-1">
-                {ml?.model || "VulnVerifier-DeBERTa-v3"}
+                {ml?.model || "Model metrics not available"}
               </h2>
-              <div className="text-xs text-zinc-400 font-mono mt-1">Version: {ml?.version || "2.1.0"}</div>
+              <div className="text-xs text-zinc-400 font-mono mt-1">
+                Version: {ml?.version || "Not reported"}
+              </div>
             </div>
-            <span className="px-2.5 py-1 rounded text-xs font-mono bg-emerald-950/60 border border-emerald-500/40 text-emerald-400">
-              INTEGRATION READY
+            <span className={`px-2.5 py-1 rounded text-xs font-mono border ${
+              isDemoMetrics
+                ? "bg-amber-950/60 border-amber-500/40 text-amber-400"
+                : error
+                  ? "bg-red-950/60 border-red-500/40 text-red-400"
+                  : "bg-emerald-950/60 border-emerald-500/40 text-emerald-400"
+            }`}>
+              {statusLabel}
             </span>
           </div>
+
+          {!loading && !error && !ml && (
+            <EmptyNotice
+              title="No model health reported"
+              description="The backend did not return ML metrics. No simulated values are substituted."
+            />
+          )}
 
           <div className="space-y-3">
             <h3 className="text-xs font-mono uppercase text-zinc-400 font-semibold">Model Role & Boundaries</h3>
@@ -99,11 +146,11 @@ export default function ModelIntelligencePage() {
           <div className="p-4 rounded bg-surface border border-surface-border space-y-2 text-xs">
             <div className="flex justify-between text-zinc-400 font-mono">
               <span>Benchmark Dataset:</span>
-              <span className="text-white">{ml?.evaluation_split || "CVE-Bench-Synthetic-2026"}</span>
+              <span className="text-white">{ml?.evaluation_split || "Not reported"}</span>
             </div>
             <div className="flex justify-between text-zinc-400 font-mono">
               <span>Evaluation Timestamp:</span>
-              <span className="text-white">{ml?.evaluated_at || "2026-10-20T18:00:00Z"}</span>
+              <span className="text-white">{ml?.evaluated_at || "Not reported"}</span>
             </div>
           </div>
         </div>

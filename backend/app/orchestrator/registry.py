@@ -1,8 +1,22 @@
 import abc
 import asyncio
-from typing import List, Dict, Any, Tuple
-from app.schemas.finding import FindingSchema, Severity, VerificationStatus, FindingCategory
+import time
+from typing import List, Dict, Any, Tuple, Optional
+
+from app.schemas.contracts import (
+    AdapterCapability,
+    ContractStatus,
+    EvidenceContractItem,
+    FindingContractItem,
+    FindingSeverity,
+    ScannerInputContract,
+    ScannerOutputContract,
+    VerificationState,
+)
 from app.schemas.evidence import EvidenceSchema
+from app.schemas.finding import FindingCategory, FindingSchema, Severity, VerificationStatus
+from app.storage.evidence import sanitize_and_redact
+
 
 class BaseScannerModule(abc.ABC):
     """
@@ -14,10 +28,110 @@ class BaseScannerModule(abc.ABC):
     description: str = "Standard scanner interface"
     version: str = "1.0.0"
     timeout_seconds: int = 15
+    capabilities: List[str] = []
 
     @abc.abstractmethod
     async def run(self, scan_id: str, target_url: str) -> Tuple[List[FindingSchema], List[EvidenceSchema]]:
         pass
+
+    def build_input_contract(
+        self,
+        scan_id: str,
+        target_url: str,
+        scope_metadata: Optional[Dict[str, Any]] = None,
+        limits: Optional[Dict[str, Any]] = None,
+    ) -> ScannerInputContract:
+        return ScannerInputContract(
+            scan_id=scan_id,
+            module_name=self.name,
+            target_url=target_url,
+            authorized_confirmation=True,
+            scope_metadata=scope_metadata or {},
+            limits=limits or {"timeout_seconds": self.timeout_seconds},
+        )
+
+    def build_capability(self) -> AdapterCapability:
+        return AdapterCapability(
+            name=self.name,
+            display_name=self.display_name,
+            version=self.version,
+            description=self.description,
+            timeout_seconds=self.timeout_seconds,
+            supported=True,
+            status="ready",
+            capabilities=self.capabilities,
+        )
+
+    def to_output_contract(
+        self,
+        scan_id: str,
+        findings: List[FindingSchema],
+        evidence: List[EvidenceSchema],
+        status: ContractStatus = ContractStatus.OK,
+        warnings: Optional[List[str]] = None,
+        errors: Optional[List[str]] = None,
+        duration_ms: Optional[int] = None,
+    ) -> ScannerOutputContract:
+        finding_items: List[FindingContractItem] = []
+        for finding in findings:
+            sev = finding.severity.value if hasattr(finding.severity, "value") else finding.severity
+            ver = finding.verification_status.value if hasattr(finding.verification_status, "value") else finding.verification_status
+            try:
+                severity = FindingSeverity(sev)
+            except Exception:
+                severity = FindingSeverity.INFO
+            try:
+                verification = VerificationState(ver)
+            except Exception:
+                verification = VerificationState.INCONCLUSIVE
+            finding_items.append(
+                FindingContractItem(
+                    id=finding.id,
+                    category=finding.category.value if hasattr(finding.category, "value") else str(finding.category),
+                    title=sanitize_and_redact(finding.title),
+                    severity=severity,
+                    verification_status=verification,
+                    endpoint=finding.endpoint,
+                    summary=sanitize_and_redact(finding.summary),
+                    description=sanitize_and_redact(finding.description),
+                    evidence_references=list(finding.evidence_references or []),
+                    remediation_guidance=sanitize_and_redact(finding.remediation_guidance),
+                    ml_confidence=finding.ml_confidence,
+                    cve_id=finding.cve_id,
+                    cvss_score=finding.cvss_score,
+                    tags=[finding.module],
+                    is_demo=finding.is_demo,
+                )
+            )
+
+        evidence_items: List[EvidenceContractItem] = []
+        for ev in evidence:
+            evidence_items.append(
+                EvidenceContractItem(
+                    id=ev.id,
+                    finding_id=ev.finding_id,
+                    evidence_type=ev.evidence_type,
+                    title=sanitize_and_redact(ev.title),
+                    sanitized_summary=sanitize_and_redact(ev.sanitized_summary),
+                    request_data=sanitize_and_redact(ev.request_data) if ev.request_data else None,
+                    response_data=sanitize_and_redact(ev.response_data) if ev.response_data else None,
+                    collected_at=ev.collected_at,
+                    is_demo=ev.is_demo,
+                )
+            )
+
+        return ScannerOutputContract(
+            scan_id=scan_id,
+            module_name=self.name,
+            module_version=self.version,
+            status=status,
+            findings=finding_items,
+            evidence=evidence_items,
+            warnings=warnings or [],
+            errors=errors or [],
+            metrics={"finding_count": len(finding_items), "evidence_count": len(evidence_items)},
+            duration_ms=duration_ms,
+        )
 
 class MockCVEIntelModule(BaseScannerModule):
     name = "cve_intel"
@@ -220,5 +334,14 @@ class ModuleRegistry:
             }
             for mod in self._modules.values()
         ]
+
+    def capabilities(self) -> List[Dict[str, Any]]:
+        return [mod.build_capability().model_dump() for mod in self._modules.values()]
+
+    def has_module(self, name: str) -> bool:
+        return name in self._modules
+
+    def available_modules(self) -> List[str]:
+        return sorted(self._modules.keys())
 
 registry = ModuleRegistry()

@@ -40,14 +40,22 @@ export function StatusBadge({ status }: { status: VerificationStatus | string })
   );
 }
 
-export function DemoNoticeBanner() {
+export function DemoNoticeBanner({
+  visible = true,
+  message
+}: {
+  visible?: boolean;
+  message?: string;
+}) {
+  if (!visible) return null;
+
   return (
     <div className="bg-amber-950/30 border border-amber-500/30 rounded-lg p-3 text-xs text-amber-200/90 flex items-start space-x-2 mb-6">
       <span className="font-mono font-bold bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wider">
-        Notice
+        Demo
       </span>
       <span>
-        Educational Demonstration Mode. Assessment metrics and findings are generated from controlled seed fixtures. Targets outside authorized demonstration bounds are strictly rejected.
+        {message || "Demo fixtures are active. These results are not verified live assessment data. Targets outside authorized demonstration bounds are still rejected."}
       </span>
     </div>
   );

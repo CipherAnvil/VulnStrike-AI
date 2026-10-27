@@ -11,33 +11,65 @@ import {
   AlertCircle
 } from "lucide-react";
 import { fetchScans, fetchFindings } from "@/lib/api";
-import { Scan, Finding } from "@/lib/types";
+import { ApiSource, Scan, Finding } from "@/lib/types";
 import { SeverityBadge, StatusBadge, DemoNoticeBanner } from "@/components/Badges";
+import { ApiErrorNotice, EmptyNotice, LoadingNotice } from "@/components/ApiState";
 
 export default function ReportsPage() {
   const [scans, setScans] = useState<Scan[]>([]);
   const [selectedScan, setSelectedScan] = useState<Scan | null>(null);
   const [findings, setFindings] = useState<Finding[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [source, setSource] = useState<ApiSource | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
-      const scansData = await fetchScans();
-      setScans(scansData);
-      if (scansData.length > 0) {
-        setSelectedScan(scansData[0]);
-        const findingsData = await fetchFindings({ scan_id: scansData[0].id });
-        setFindings(findingsData);
+      try {
+        const scansResult = await fetchScans();
+        const messages: string[] = [];
+        let nextSource: ApiSource = scansResult.source;
+
+        setScans(scansResult.data);
+        setSource(scansResult.source);
+        setNotice(scansResult.notice || null);
+        if (scansResult.notice) messages.push(scansResult.notice);
+
+        if (scansResult.data.length > 0) {
+          const scan = scansResult.data[0];
+          setSelectedScan(scan);
+          const findingsResult = await fetchFindings({ scan_id: scan.id });
+          setFindings(findingsResult.data);
+          if (findingsResult.source === "demo") nextSource = "demo";
+          if (findingsResult.notice) messages.push(findingsResult.notice);
+        } else {
+          setFindings([]);
+        }
+
+        setSource(nextSource);
+        setNotice(messages.join(" ") || null);
+      } catch (loadError) {
+        setError(loadError instanceof Error ? loadError.message : "Failed to load report data.");
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
     load();
   }, []);
 
   const handleSelectScan = async (scan: Scan) => {
     setSelectedScan(scan);
-    const data = await fetchFindings({ scan_id: scan.id });
-    setFindings(data);
+    setError(null);
+    try {
+      const result = await fetchFindings({ scan_id: scan.id });
+      setFindings(result.data);
+      if (result.source === "demo") setSource("demo");
+      if (result.notice) setNotice(result.notice);
+    } catch (loadError) {
+      setFindings([]);
+      setError(loadError instanceof Error ? loadError.message : "Failed to load findings for this scan.");
+    }
   };
 
   const downloadJson = () => {
@@ -106,7 +138,9 @@ ${findings.map(f => `
 
   return (
     <div className="space-y-6">
-      <DemoNoticeBanner />
+      <DemoNoticeBanner visible={source === "demo"} message={notice || undefined} />
+      {loading && <LoadingNotice label="Loading report data..." />}
+      {error && <ApiErrorNotice message={`Report data unavailable. ${error}`} />}
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-surface-border">
         <div>
@@ -162,6 +196,12 @@ ${findings.map(f => `
                 <div className="text-[10px] text-zinc-500">{scan.created_at}</div>
               </div>
             ))}
+            {!loading && scans.length === 0 && (
+              <EmptyNotice
+                title="No reportable scans"
+                description="No scans are available yet. Demo records are not substituted for an empty live response."
+              />
+            )}
           </div>
         </div>
 
@@ -220,12 +260,22 @@ ${findings.map(f => `
                       </div>
                     </div>
                   ))}
+                  {findings.length === 0 && (
+                    <EmptyNotice
+                      title="No findings for this scan"
+                      description="The selected scan has no persisted findings. No demo records are shown."
+                    />
+                  )}
                 </div>
               </div>
             </div>
           ) : (
             <div className="text-center text-xs text-zinc-500 py-16">
-              Select an assessment audit on the left to review reports and export documents.
+              {loading
+                ? "Loading assessment audits..."
+                : error
+                  ? "Report previews are unavailable until the API responds."
+                  : "Select an assessment audit on the left to review reports and export documents."}
             </div>
           )}
         </div>

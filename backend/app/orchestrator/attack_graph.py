@@ -1,7 +1,21 @@
-from typing import List
-from app.schemas.finding import FindingSchema
+from typing import Dict, List, Set
+
 from app.schemas.evidence import EvidenceSchema
-from app.schemas.report import AttackGraphData, AttackGraphNode, AttackGraphEdge
+from app.schemas.finding import FindingSchema
+from app.schemas.report import AttackGraphData, AttackGraphEdge, AttackGraphNode
+
+
+def _category_value(finding: FindingSchema) -> str:
+    return finding.category.value if hasattr(finding.category, "value") else str(finding.category)
+
+
+def _severity_value(finding: FindingSchema) -> str:
+    return finding.severity.value if hasattr(finding.severity, "value") else str(finding.severity)
+
+
+def _status_value(finding: FindingSchema) -> str:
+    return finding.verification_status.value if hasattr(finding.verification_status, "value") else str(finding.verification_status)
+
 
 def build_attack_graph(scan_id: str, target_url: str, findings: List[FindingSchema], evidence: List[EvidenceSchema]) -> AttackGraphData:
     """
@@ -10,84 +24,108 @@ def build_attack_graph(scan_id: str, target_url: str, findings: List[FindingSche
     """
     nodes: List[AttackGraphNode] = []
     edges: List[AttackGraphEdge] = []
+    node_ids: Set[str] = set()
+    edge_ids: Set[str] = set()
 
-    # Target entry node
-    nodes.append(AttackGraphNode(
-        id="target-root",
-        type="target",
-        label=f"Target: {target_url}",
-        severity="info",
-        status="active",
-        data={"target_url": target_url, "description": "Authorized demonstration target"}
-    ))
+    def add_node(node: AttackGraphNode) -> None:
+        if node.id in node_ids:
+            return
+        nodes.append(node)
+        node_ids.add(node.id)
 
-    # Add findings as nodes
-    finding_map = {}
-    for f in findings:
-        node_id = f"finding-{f.id}"
-        finding_map[f.category.value if hasattr(f.category, 'value') else f.category] = node_id
-        nodes.append(AttackGraphNode(
-            id=node_id,
-            type="finding",
-            label=f.title[:38] + ("..." if len(f.title) > 38 else ""),
-            severity=f.severity.value if hasattr(f.severity, 'value') else f.severity,
-            status=f.verification_status.value if hasattr(f.verification_status, 'value') else f.verification_status,
-            data={
-                "id": f.id,
-                "title": f.title,
-                "endpoint": f.endpoint,
-                "severity": f.severity.value if hasattr(f.severity, 'value') else f.severity,
-                "verification_status": f.verification_status.value if hasattr(f.verification_status, 'value') else f.verification_status,
-                "module": f.module,
-                "ml_confidence": f.ml_confidence,
-                "evidence_references": f.evidence_references,
-                "remediation": f.remediation_guidance
-            }
-        ))
-        
-        # Link root target to discovering endpoint
-        edges.append(AttackGraphEdge(
-            id=f"edge-root-{f.id}",
-            source="target-root",
-            target=node_id,
-            label="Discovered on endpoint",
-            relationship="discovery"
-        ))
+    def add_edge(edge: AttackGraphEdge) -> None:
+        if edge.id in edge_ids:
+            return
+        if edge.source not in node_ids or edge.target not in node_ids:
+            return
+        edges.append(edge)
+        edge_ids.add(edge.id)
 
-    # Add explicit supported attack relationship fixture:
-    # Access Control bypass leads to Exposed Test Record disclosure
+    add_node(
+        AttackGraphNode(
+            id="target-root",
+            type="target",
+            label=f"Target: {target_url}",
+            severity="info",
+            status="active",
+            data={"target_url": target_url, "description": "Authorized demonstration target", "scan_id": scan_id},
+        )
+    )
+
+    finding_map: Dict[str, str] = {}
+    for finding in findings:
+        node_id = f"finding-{finding.id}"
+        finding_map[_category_value(finding)] = node_id
+        add_node(
+            AttackGraphNode(
+                id=node_id,
+                type="finding",
+                label=finding.title[:38] + ("..." if len(finding.title) > 38 else ""),
+                severity=_severity_value(finding),
+                status=_status_value(finding),
+                data={
+                    "id": finding.id,
+                    "title": finding.title,
+                    "endpoint": finding.endpoint,
+                    "severity": _severity_value(finding),
+                    "verification_status": _status_value(finding),
+                    "module": finding.module,
+                    "category": _category_value(finding),
+                    "ml_confidence": finding.ml_confidence,
+                    "evidence_references": list(finding.evidence_references or []),
+                    "remediation": finding.remediation_guidance,
+                    "is_demo": finding.is_demo,
+                },
+            )
+        )
+        add_edge(
+            AttackGraphEdge(
+                id=f"edge-root-{finding.id}",
+                source="target-root",
+                target=node_id,
+                label="Discovered on endpoint",
+                relationship="discovery",
+            )
+        )
+
     access_node = finding_map.get("access_control")
     info_node = finding_map.get("info_disclosure")
     if access_node and info_node:
-        edges.append(AttackGraphEdge(
-            id="edge-access-to-data-leak",
-            source=access_node,
-            target=info_node,
-            label="Permits pivot into user registry",
-            evidence_id="EV-REL-01",
-            relationship="exploit_pivot"
-        ))
+        add_edge(
+            AttackGraphEdge(
+                id="edge-access-to-data-leak",
+                source=access_node,
+                target=info_node,
+                label="Permits pivot into user registry (inferred)",
+                evidence_id="EV-REL-01",
+                relationship="exploit_pivot",
+            )
+        )
 
-    # Add impact node representing test record exfiltration
     if info_node:
         impact_id = "impact-data-exfil"
-        nodes.append(AttackGraphNode(
-            id=impact_id,
-            type="impact",
-            label="Potential Synthetic Tenant Record Exposure",
-            severity="high",
-            status="confirmed",
-            data={
-                "impact_type": "Data Exposure",
-                "details": "Chained access control failure and unrestricted endpoint allow reading seeded lab user fixtures."
-            }
-        ))
-        edges.append(AttackGraphEdge(
-            id="edge-leak-to-impact",
-            source=info_node,
-            target=impact_id,
-            label="Results in",
-            relationship="consequence"
-        ))
+        add_node(
+            AttackGraphNode(
+                id=impact_id,
+                type="impact",
+                label="Potential Synthetic Tenant Record Exposure",
+                severity="high",
+                status="confirmed",
+                data={
+                    "impact_type": "Data Exposure",
+                    "details": "Chained access control failure and unrestricted endpoint allow reading seeded lab user fixtures. This is an inferred consequence for lab demonstration purposes.",
+                    "inferred": True,
+                },
+            )
+        )
+        add_edge(
+            AttackGraphEdge(
+                id="edge-leak-to-impact",
+                source=info_node,
+                target=impact_id,
+                label="Results in (inferred)",
+                relationship="consequence",
+            )
+        )
 
     return AttackGraphData(nodes=nodes, edges=edges)

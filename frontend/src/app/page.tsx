@@ -13,29 +13,58 @@ import {
   Server
 } from "lucide-react";
 import { fetchScans, fetchFindings, fetchHealth } from "@/lib/api";
-import { Scan, Finding } from "@/lib/types";
+import { ApiSource, HealthData, Scan, Finding } from "@/lib/types";
 import { SeverityBadge, StatusBadge, DemoNoticeBanner } from "@/components/Badges";
+import { ApiErrorNotice, EmptyNotice, LoadingNotice } from "@/components/ApiState";
 
 export default function OverviewPage() {
   const [scans, setScans] = useState<Scan[]>([]);
   const [findings, setFindings] = useState<Finding[]>([]);
-  const [health, setHealth] = useState<any>(null);
+  const [health, setHealth] = useState<HealthData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [source, setSource] = useState<ApiSource | null>(null);
+  const [notices, setNotices] = useState<string[]>([]);
 
   useEffect(() => {
     async function loadData() {
-      try {
-        const [scansData, findingsData, healthData] = await Promise.all([
-          fetchScans(),
-          fetchFindings(),
-          fetchHealth()
-        ]);
-        setScans(scansData);
-        setFindings(findingsData);
-        setHealth(healthData);
-      } finally {
-        setLoading(false);
+      const [scansResult, findingsResult, healthResult] = await Promise.allSettled([
+        fetchScans(),
+        fetchFindings(),
+        fetchHealth()
+      ]);
+      const failures: string[] = [];
+      const messages: string[] = [];
+      let nextSource: ApiSource | null = null;
+
+      if (scansResult.status === "fulfilled") {
+        setScans(scansResult.value.data);
+        nextSource = nextSource === "demo" || scansResult.value.source === "demo" ? "demo" : "live";
+        if (scansResult.value.notice) messages.push(scansResult.value.notice);
+      } else {
+        failures.push(`Scans: ${scansResult.reason instanceof Error ? scansResult.reason.message : "unavailable"}`);
       }
+
+      if (findingsResult.status === "fulfilled") {
+        setFindings(findingsResult.value.data);
+        nextSource = nextSource === "demo" || findingsResult.value.source === "demo" ? "demo" : "live";
+        if (findingsResult.value.notice) messages.push(findingsResult.value.notice);
+      } else {
+        failures.push(`Findings: ${findingsResult.reason instanceof Error ? findingsResult.reason.message : "unavailable"}`);
+      }
+
+      if (healthResult.status === "fulfilled") {
+        setHealth(healthResult.value.data);
+        nextSource = nextSource === "demo" || healthResult.value.source === "demo" ? "demo" : "live";
+        if (healthResult.value.notice) messages.push(healthResult.value.notice);
+      } else {
+        failures.push(`Health: ${healthResult.reason instanceof Error ? healthResult.reason.message : "unavailable"}`);
+      }
+
+      setSource(nextSource);
+      setNotices(messages);
+      setError(failures.length > 0 ? `Some live data could not be loaded. ${failures.join(" ")}` : null);
+      setLoading(false);
     }
     loadData();
   }, []);
@@ -47,7 +76,15 @@ export default function OverviewPage() {
 
   return (
     <div className="space-y-6">
-      <DemoNoticeBanner />
+      <DemoNoticeBanner
+        visible={source === "demo" || health?.is_demo === true}
+        message={
+          notices.join(" ") ||
+          (health?.is_demo ? "Simulated health and ML metrics are demo-only and are not verified live status." : undefined)
+        }
+      />
+      {loading && <LoadingNotice />}
+      {error && <ApiErrorNotice message={error} />}
 
       {/* Top Header & Fast Action */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-surface-border">
@@ -178,22 +215,29 @@ export default function OverviewPage() {
             <Server className="w-4 h-4 text-zinc-500" />
           </div>
           <div className="space-y-3">
-            {(health?.registered_modules || [
-              { name: "cve_intel", display_name: "CVE Intelligence", status: "ready" },
-              { name: "web_analyzer", display_name: "Web Security Analyzer", status: "ready" },
-              { name: "auth_tester", display_name: "Auth & BOLA Inspector", status: "ready" },
-              { name: "api_inspector", display_name: "API Probe Engine", status: "ready" }
-            ]).map((mod: any) => (
-              <div key={mod.name} className="flex items-center justify-between py-2 border-b border-surface-border/50 text-xs">
-                <div>
-                  <div className="font-medium text-white">{mod.display_name}</div>
-                  <div className="text-[11px] font-mono text-zinc-400">{mod.name}</div>
+            {(health?.registered_modules || []).map((mod) => {
+              const isDemoModule = health?.is_demo === true;
+              return (
+                <div key={mod.name} className="flex items-center justify-between py-2 border-b border-surface-border/50 text-xs">
+                  <div>
+                    <div className="font-medium text-white">{mod.display_name}</div>
+                    <div className="text-[11px] font-mono text-zinc-400">{mod.name}</div>
+                  </div>
+                  <span className={`px-2 py-0.5 rounded font-mono text-[10px] border ${
+                    isDemoModule
+                      ? "bg-amber-950/60 border-amber-500/40 text-amber-400"
+                      : "bg-emerald-950/60 border-emerald-500/40 text-emerald-400"
+                  }`}>
+                    {isDemoModule ? "DEMO" : mod.status.toUpperCase()}
+                  </span>
                 </div>
-                <span className="px-2 py-0.5 rounded font-mono text-[10px] bg-emerald-950/60 border border-emerald-500/40 text-emerald-400">
-                  READY
-                </span>
+              );
+            })}
+            {!loading && (health?.registered_modules || []).length === 0 && (
+              <div className="py-6 text-center text-xs text-zinc-500">
+                Module registry unavailable.
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>
@@ -227,6 +271,9 @@ export default function OverviewPage() {
                 </div>
               </div>
             ))}
+            {!loading && scans.length === 0 && (
+              <EmptyNotice title="No scans yet" description="Launch an authorized scan to populate the assessment history." />
+            )}
           </div>
         </div>
 
@@ -252,6 +299,9 @@ export default function OverviewPage() {
                 <div className="text-zinc-400 font-mono text-[11px] truncate">{finding.endpoint}</div>
               </div>
             ))}
+            {!loading && findings.length === 0 && (
+              <EmptyNotice title="No findings recorded" description="Findings appear here after a completed assessment." />
+            )}
           </div>
         </div>
       </div>

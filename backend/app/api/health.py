@@ -10,6 +10,7 @@ def health_check():
         "service": "VulnStrike AI Orchestrator Core",
         "version": "1.0.0",
         "database": "sqlite_connected",
+        "is_demo": True,
         "ml_engine": {
             "status": "online_simulated",
             "model": "VulnVerifier-DeBERTa-v3",
@@ -18,7 +19,8 @@ def health_check():
             "recall": 0.918,
             "f1": 0.930,
             "evaluation_split": "CVE-Bench-Synthetic-2026",
-            "evaluated_at": "2026-10-20T18:00:00Z"
+            "evaluated_at": "2026-10-20T18:00:00Z",
+            "is_demo": True
         },
         "registered_modules": registry.list_modules()
     }

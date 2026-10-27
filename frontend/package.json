@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit --incremental false",
+    "test:api": "tsc -p tsconfig.test.json && node --test .test-dist/tests/api-fallback.test.js"
   },
   "dependencies": {
     "clsx": "^2.1.1",

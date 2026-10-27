@@ -13,8 +13,9 @@ import {
   RotateCcw
 } from "lucide-react";
 import { fetchScans, startScan } from "@/lib/api";
-import { Scan, ScanProfile } from "@/lib/types";
+import { ApiSource, Scan, ScanProfile } from "@/lib/types";
 import { StatusBadge, DemoNoticeBanner } from "@/components/Badges";
+import { ApiErrorNotice, LoadingNotice } from "@/components/ApiState";
 
 export default function ScansPage() {
   const [scans, setScans] = useState<Scan[]>([]);
@@ -30,16 +31,33 @@ export default function ScansPage() {
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [activeScan, setActiveScan] = useState<Scan | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [source, setSource] = useState<ApiSource | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
     loadScans();
   }, []);
 
   async function loadScans() {
-    const data = await fetchScans();
-    setScans(data);
-    if (data.length > 0 && !activeScan) {
-      setActiveScan(data[0]);
+    setLoading(true);
+    try {
+      const result = await fetchScans();
+      setScans(result.data);
+      setSource(result.source);
+      setNotice(result.notice || null);
+      setLoadError(null);
+      setActiveScan((current) => {
+        if (result.data.length === 0) return null;
+        return current && result.data.some((scan) => scan.id === current.id)
+          ? current
+          : result.data[0];
+      });
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : "Failed to load scans.");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -69,7 +87,9 @@ export default function ScansPage() {
 
   return (
     <div className="space-y-6">
-      <DemoNoticeBanner />
+      <DemoNoticeBanner visible={source === "demo"} message={notice || undefined} />
+      {loading && <LoadingNotice label="Loading scan history..." />}
+      {loadError && <ApiErrorNotice message={`Scan history unavailable. ${loadError}`} />}
 
       <div className="flex items-center justify-between pb-2 border-b border-surface-border">
         <div>
@@ -242,7 +262,11 @@ export default function ScansPage() {
               </div>
             ) : (
               <div className="py-12 text-center text-xs text-zinc-400">
-                Select or launch a scan to monitor orchestrator logs.
+                {loading
+                  ? "Loading scan lifecycle..."
+                  : scans.length === 0
+                    ? "No scans yet. Launch an authorized scan to begin."
+                    : "Select or launch a scan to monitor orchestrator logs."}
               </div>
             )}
           </div>
