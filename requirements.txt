@@ -1,0 +1,7 @@
+# VulnStrike AI - Lightweight Serverless API & Web Runtime Requirements
+# Optimized for Vercel Serverless Function 250MB limit & fast local serving
+fastapi>=0.110.0
+pydantic>=2.6.0
+uvicorn[standard]>=0.29.0
+requests>=2.31.0
+python-multipart>=0.0.9
